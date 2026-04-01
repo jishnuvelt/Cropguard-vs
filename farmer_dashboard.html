@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard - {{ farmer.name }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header class="hero compact">
+        <div>
+            <h1>🧑‍🌾 Dashboard</h1>
+            <p style="font-size: 1.1rem; opacity: 0.9;">{{ farmer.name }} | {{ farmer.language }}</p>
+        </div>
+        <a class="btn secondary" href="/">← Home</a>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>📸 Upload New Case</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Take a clear picture of the affected crop and
+                describe the symptoms below.</p>
+            <form class="form-grid" action="/web/cases" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="farmer_id" value="{{ farmer.id }}">
+
+                <label>Crop Name
+                    <input type="text" name="crop_name" required placeholder="e.g., Tomato, Wheat">
+                </label>
+
+                <label>Location
+                    <input type="text" name="location" placeholder="Village / District">
+                </label>
+
+                <label class="full">Symptoms
+                    <textarea name="symptoms" rows="4" required
+                        placeholder="Describe visible symptoms in your local language..."></textarea>
+                </label>
+
+                <label class="full">Upload Photo
+                    <input type="file" name="image" accept="image/*" required>
+                </label>
+
+                <button class="btn full" type="submit" style="margin-top: 1rem;">✨ Submit Case for Analysis</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>📋 My Active Cases</h2>
+            {% if cases %}
+            <div class="grid">
+                {% for case in cases %}
+                <article class="case">
+                    {% if case.image_path %}
+                    <a class="case-image-wrap" href="{{ case.image_path }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ case.image_path }}" alt="Case image for {{ case.crop_name }}" loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="case-image-fallback">Case image unavailable</div>
+                    </a>
+                    {% else %}
+                    <div class="case-image-fallback visible">No case image uploaded</div>
+                    {% endif %}
+                    <div class="case-row">
+                        <span class="label">Case #{{ case.id }}</span>
+                        <span class="status" data-status="{{ case.status.name }}">{{ case.status.value }}</span>
+                    </div>
+                    <div
+                        style="background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                        <p><strong>Crop:</strong> {{ case.crop_name }}</p>
+                        <p><strong>Symptoms:</strong> {{ case.symptoms }}</p>
+                    </div>
+
+                    <p><strong>🤖 AI Diagnosis:</strong> <span style="color: var(--primary-hover); font-weight: 700;">{{
+                            case.predicted_disease }}</span> ({{ "%.0f"|format(case.ai_confidence * 100) }}%)</p>
+                    <p><strong>Severity:</strong> {{ case.severity_score }}/10</p>
+                    <p><strong>💡 AI Advice:</strong> {{ case.ai_recommendation }}</p>
+
+                    {% if case.recommendations %}
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+                        <p style="color: #2563eb; margin-bottom: 0.5rem;"><strong>👨‍🔬 Expert Advice Received:</strong>
+                        </p>
+                        {% for rec in case.recommendations %}
+                        <div
+                            style="background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                            <p><strong>Diagnosis:</strong> {{ rec.diagnosis }}</p>
+                            <p><strong>Treatment:</strong> {{ rec.treatment_plan }}</p>
+                            {% if rec.dosage %}
+                            <p><strong>Dosage:</strong> {{ rec.dosage }}</p>
+                            {% endif %}
+                            {% if rec.safety_notes %}
+                            <p style="color: var(--accent); margin-top: 0.5rem;"><strong>⚠️ Safety:</strong> {{
+                                rec.safety_notes }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <p style="font-size: 3rem; margin-bottom: 1rem;">🌿</p>
+                <p>No cases submitted yet.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+
+</html>
