@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Dashboard - {{ expert.name }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header class="hero compact expert-theme">
+        <div>
+            <h1>👨‍🔬 Expert Portal</h1>
+            <p style="font-size: 1.1rem; opacity: 0.9;">{{ expert.name }}</p>
+        </div>
+        <a class="btn secondary" href="/">← Home</a>
+    </header>
+
+    <main class="container">
+        <section class="card expert-theme-card">
+            <h2>⏳ Pending Expert Queue</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Review cases escalated by the AI engine that
+                require human expertise.</p>
+            {% if queue %}
+            <div class="grid">
+                {% for case in queue %}
+                <article class="case">
+                    {% if case.image_path %}
+                    <a class="case-image-wrap" href="{{ case.image_path }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ case.image_path }}" alt="Case image for {{ case.crop_name }}" loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="case-image-fallback">Case image unavailable</div>
+                    </a>
+                    {% else %}
+                    <div class="case-image-fallback visible">No case image uploaded</div>
+                    {% endif %}
+                    <div class="case-row">
+                        <span class="label">Case #{{ case.id }}</span>
+                        <span class="status needs" data-status="{{ case.status.name }}">{{ case.status.value }}</span>
+                    </div>
+
+                    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <p><strong>Crop:</strong> {{ case.crop_name }}</p>
+                        <p><strong>Location:</strong> {{ case.location or "N/A" }}</p>
+                        <p><strong>Symptoms reported:</strong> {{ case.symptoms }}</p>
+                    </div>
+
+                    <p><strong>🤖 AI Prediction:</strong> {{ case.predicted_disease }} ({{
+                        "%.0f"|format(case.ai_confidence * 100) }}%)</p>
+                    <p><strong>💡 AI Advice:</strong> {{ case.ai_recommendation }}</p>
+
+                    <hr style="margin: 1.5rem 0 1rem; border-color: #cbd5e1;">
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #1e3a8a;">Provide Recommendation</h3>
+                    <form class="form-grid" action="/web/cases/{{ case.id }}/recommend" method="post"
+                        style="margin-top:0;">
+                        <input type="hidden" name="expert_id" value="{{ expert.id }}">
+                        <label>Diagnosis
+                            <input type="text" name="diagnosis" required>
+                        </label>
+                        <label>Dosage
+                            <input type="text" name="dosage" placeholder="e.g., 2 ml/litre">
+                        </label>
+                        <label class="full">Treatment Plan
+                            <textarea name="treatment_plan" rows="3" required></textarea>
+                        </label>
+                        <label>Duration (days)
+                            <input type="number" name="duration_days" min="1" max="120">
+                        </label>
+                        <label class="full">Safety Notes
+                            <textarea name="safety_notes" rows="2" placeholder="PPE / withdrawal period"></textarea>
+                        </label>
+                        <button class="btn full" type="submit" style="background:#3b82f6;">Submit
+                            Recommendation</button>
+                    </form>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div
+                style="text-align: center; padding: 3rem; color: var(--text-muted); background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <p style="font-size: 3rem; margin-bottom: 1rem;">🎉</p>
+                <p>No pending cases in your queue! You're all caught up.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <h2>✅ Recently Reviewed</h2>
+            {% if reviewed %}
+            <ul class="review-list">
+                {% for rec in reviewed %}
+                <li>
+                    <span
+                        style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; color: #059669;">
+                        Case #{{ rec.case_id }}
+                    </span>
+                    <strong style="flex: 1;">{{ rec.diagnosis }}</strong>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">
+                        {{ rec.created_at.strftime("%Y-%m-%d %H:%M") }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-muted);">No recommendations submitted yet.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+
+</html>
