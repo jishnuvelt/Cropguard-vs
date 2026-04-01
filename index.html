@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropGuard - AI Crop Disease Triage</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="hero">
+        <h1>🌿 CropGuard</h1>
+        <p>AI triage + expert advisory for intelligent crop disease management</p>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>🧑‍🌾 Farmer Portals</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Select a profile to upload plant issues and get instant AI diagnosis.</p>
+            <div class="chip-list">
+                {% for farmer in farmers %}
+                    <a class="chip" href="/farmer/{{ farmer.id }}">
+                        <span>🌾</span> {{ farmer.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="card expert-theme-card">
+            <h2>👨‍🔬 Expert Portals</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Select an expert profile to review high-severity cases in the queue.</p>
+            <div class="chip-list">
+                {% for expert in experts %}
+                    <a class="chip expert" href="/expert/{{ expert.id }}">
+                        <span>🔬</span> {{ expert.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📋 Recent Cases</h2>
+            {% if recent_cases %}
+                <div class="grid">
+                    {% for case in recent_cases %}
+                        <article class="case">
+                            {% if case.image_path %}
+                                <img src="{{ case.image_path }}" alt="Case image">
+                            {% endif %}
+                            <div class="case-row">
+                                <span class="label">Case #{{ case.id }}</span>
+                                <span class="status" data-status="{{ case.status.name }}">{{ case.status.value }}</span>
+                            </div>
+                            <p><strong>Crop:</strong> {{ case.crop_name }}</p>
+                            <p><strong>Disease:</strong> {{ case.predicted_disease }}</p>
+                            <p><strong>AI confidence:</strong> {{ "%.0f"|format(case.ai_confidence * 100) }}%</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <p style="font-size: 3rem; margin-bottom: 1rem;">🌱</p>
+                    <p>No cases submitted yet.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>
