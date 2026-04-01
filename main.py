@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Optional
 
@@ -35,23 +36,25 @@ from .services import (
 )
 from .weather import fetch_current_weather_from_env, WeatherServiceError
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    ensure_runtime_dirs()
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_demo_users(db)
+    yield
+
 app = FastAPI(
     title="CropGuard API",
     description="Plant disease triage and expert-assisted advisory system",
     version="1.0.0",
+    lifespan=lifespan,
 )
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    ensure_runtime_dirs()
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        seed_demo_users(db)
 
 
 def _get_user_or_404(db: Session, user_id: int, expected_role: Optional[UserRole] = None) -> User:
@@ -128,7 +131,7 @@ def get_current_weather(
     try:
         return fetch_current_weather_from_env(city=city, units=units)
     except WeatherServiceError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 
 @app.post("/api/farmers", response_model=UserRead, status_code=status.HTTP_201_CREATED)
